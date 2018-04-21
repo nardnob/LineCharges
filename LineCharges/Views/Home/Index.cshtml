@@ -1,0 +1,141 @@
+﻿@model LineCharges.Models.ChargeForm
+@{
+    ViewBag.Title = "Classic Approach";
+}
+
+@using (@Html.BeginForm("Index", "Home", FormMethod.Post))
+{
+    <div class="app-container">
+        <div class="app-header">
+            <span class="hidden-xs">Line Charge Application (</span>@ViewBag.Title<span class="hidden-xs">)</span>
+        </div>
+        <div class="entry-section">
+            <div class="row">
+                <div class="col-xs-12">
+                    <div class="form-inline pull-right">
+                        @Html.TextBoxFor(chargeForm => chargeForm.ChargeEntry.Amount, new { placeholder = "Charge Amount", maxlength = "10", @class = "form-control" })
+                        @Html.EnumDropDownListFor(charge => charge.ChargeEntry.Type, "Charge Type", new { @class = "form-control" })
+                        <button type="submit" class="btn btn-primary">
+                            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Add
+                        </button>
+                    </div>
+                    <div class="clearfix"></div>
+
+                    <div class="pull-right">
+                        @Html.ValidationMessageFor(chargeForm => chargeForm.ChargeEntry.Amount, "", new { @class = "text-danger" })
+                    </div>
+                    <div class="clearfix"></div>
+
+                    <div class="pull-right">
+                        @Html.ValidationMessageFor(chargeForm => chargeForm.ChargeEntry.Type, "", new { @class = "text-danger" })
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="display-section">
+            <div class="row">
+                <div class="col-xs-12">
+                    <div class="table-header">
+                        <span class="glyphicon glyphicon-credit-card"></span> <span>Charges</span>
+                    </div>
+
+                    @if (Model != null && Model.Charges != null && Model.Charges.Any())
+                    {
+                        <table>
+                            <tr class="header-row">
+                                <th>AMOUNT</th>
+                                <th>TYPE</th>
+                                <th>TRANSACTION DATE</th>
+                            </tr>
+                            @for (var i = Model.Charges.Count - 1; i >= 0; i--) //descending
+                            {
+                                var charge = Model.Charges[i];
+                                var altClass = i % 2 == 0 ? "alt-row" : "";
+                                var isDebit = charge.AmountValue > 0;
+                                var isCredit = charge.AmountValue < 0;
+                                var debitCreditClass = isDebit ? "debit-amount" : isCredit ? "credit-amount" : "";
+
+                                <tr>
+                                    <td class="@altClass @debitCreditClass">
+                                        @if (isCredit)
+                                        {<span>(</span>}$@Math.Abs(charge.AmountValue).ToString("0.00")@if (isCredit)
+                                        {<span>)</span>}
+                                    </td>
+                                    <td class="@altClass">@charge.Type</td>
+                                    <td class="@altClass">@charge.TransactionDate.Value.ToString("M/dd/yyyy h:mm:ss tt")</td>
+                                </tr>
+
+                                @Html.HiddenFor(model => model.Charges[i].Amount);
+                                @Html.HiddenFor(model => model.Charges[i].AmountValue);
+                                @Html.HiddenFor(model => model.Charges[i].Type);
+                                @Html.HiddenFor(model => model.Charges[i].TransactionDate);
+                            }
+                            <tr class="footer-row">
+                                @{
+                                    var fullTotal = Model.TotalDeposits + Model.TotalExpenses + Model.TotalFees;
+                                    var negateString = fullTotal < 0 ? "-" : "";
+                                }
+                                <th colspan="3">@negateString$@Math.Abs(@fullTotal).ToString("0.00")</th>
+                            </tr>
+                        </table>
+                    }
+                    else
+                    {
+                        <div class="none-found">
+                            No charges found.
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="section-separator"></div>
+
+            <div class="row">
+                <div class="col-xs-12">
+                    <div class="table-header">
+                        <span class="glyphicon glyphicon-usd"></span> <span>Totals by Type</span>
+                    </div>
+
+                    <table>
+                        <tr class="header-row">
+                            <th>TYPE</th>
+                            <th><span class="glyphicon glyphicon-sort-by-attributes-alt"></span> AMOUNT</th>
+                        </tr>
+
+                        @{
+                            var totals = new List<Tuple<string, double>>
+                            {
+                                new Tuple<string, double> ("Deposit", Model.TotalDeposits),
+                                new Tuple<string, double> ("Expense", Model.TotalExpenses),
+                                new Tuple<string, double> ("Fee", Model.TotalFees)
+                            };
+
+                            totals = totals.OrderByDescending(i => i.Item2).ToList();
+                        }
+
+                        @for (var i = 0; i < totals.Count(); i++)
+                        {
+                            var totalItem = totals[i];
+                            var totalName = totalItem.Item1;
+                            var totalAmount = totalItem.Item2;
+
+                            var negateString = totalAmount < 0 ? "-" : "";
+                            var altClass = i % 2 == 0 ? "" : "alt-row";
+
+                            <tr>
+                                <td class="@altClass">@totalName</td>
+                                <td class="@altClass">@negateString$@Math.Abs(@totalAmount).ToString("0.00")</td>
+                            </tr>
+                        }
+                    </table>
+
+                    @Html.HiddenFor(model => model.TotalDeposits)
+                    @Html.HiddenFor(model => model.TotalExpenses)
+                    @Html.HiddenFor(model => model.TotalFees)
+                </div>
+            </div>
+        </div>
+    </div>
+}

@@ -1,0 +1,146 @@
+﻿html, body {
+    height: 100%;
+    background-color: #888888;
+}
+
+.body-wrapper {
+    min-height: 100%;
+    padding-bottom: 25px;
+}
+
+
+/* Overrides to allow inline forms to display horizontally on xs */
+@media (max-width: 767px) {
+    .form-inline .form-control {
+        display: inline-block;
+        width: auto;
+        vertical-align: middle;
+    }
+}
+
+/* Overrides to allow inline forms to display horizontally on xs */
+@media (max-width: 767px) {
+    .form-inline .form-group {
+        display: inline-block;
+        margin-bottom: 0;
+        vertical-align: middle;
+    }
+}
+
+/* Override the default bootstrap behavior where horizontal description lists 
+   will truncate terms that are too long to fit in the left column 
+*/
+.dl-horizontal dt {
+    white-space: normal;
+}
+
+.app-container {
+    border: 1px solid #D0CFCF;
+    background-color: white;
+}
+
+.app-header {
+    height: 44px;
+    color: white;
+    background-color: #008CBA;
+    font-size: 19px;
+    font-family: 'Montserrat', sans-serif;
+    padding-top: 9px;
+    padding-left: 40px;
+}
+
+.section-separator {
+    border-top: 1px solid #E0E0E0;
+    height: 1px;
+    margin-top: 21px;
+    margin-bottom: 2px;
+}
+
+.entry-section {
+    margin-top: 12px;
+    margin-bottom: 12px;
+    padding-right: 32px;
+    padding-left: 32px;
+}
+
+.display-section {
+    border-top: 1px solid #D0CFCF;
+    padding: 14px 33px 25px 33px;
+    background-color: #F6F7FA;
+}
+
+.btn-primary {
+    background-color: #008CBA;
+    border-radius: 0;
+    height: 37px;
+}
+
+input, select {
+    border-radius: 0 !important;
+    height: 37px !important;
+}
+
+.glyphicon-credit-card {
+    font-size: 36px !important;
+    vertical-align: middle;
+}
+
+.glyphicon-usd {
+    font-size: 30px !important;
+    vertical-align: middle;
+    width: 24px;
+    margin-left: -6px;
+}
+
+.table-header {
+    font-size: 31px;
+    font-family: 'Montserrat', sans-serif;
+    margin-bottom: 3px;
+}
+
+.table-header span {
+    vertical-align: middle;
+}
+
+table {
+    width: 100%;
+}
+
+tr {
+    height: 33px;
+}
+
+th, td {
+    padding-left: 7px;
+    padding-right: 7px;
+    border: 1px solid #E0E0E0;
+}
+
+td {
+    background-color: white;
+}
+
+td.alt-row {
+    background-color: #F5F5F5;
+}
+
+.header-row, .footer-row {
+    background-color: #212121;
+    color: white;
+}
+
+.debit-amount {
+    color: #3EA942;
+}
+
+.credit-amount {
+    color: #F22D1F;
+}
+
+.error-message {
+    display: none;
+}
+
+#charges {
+    display: none;
+}

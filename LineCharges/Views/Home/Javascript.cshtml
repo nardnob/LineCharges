@@ -1,0 +1,303 @@
+﻿@{
+    ViewBag.Title = "Javascript Approach";
+}
+
+@section Scripts {
+    <script>
+        var controller = (function () {
+            var charges = [];
+            var totals = {
+                deposits: 0,
+                expenses: 0,
+                fees: 0
+            };
+
+            activate();
+
+            return {
+                addCharge: addCharge
+            };
+
+
+            //--------------
+            //Public Methods
+
+            function addCharge() {
+                resetErrors();
+
+                var charge = parseCharge();
+
+                var validationErrors = validateCharge(charge);
+                if (validationErrors.length > 0) {
+                    displayErrors(validationErrors);
+                    return;
+                }
+
+                saveCharge(charge);
+            }
+
+
+            //--------------
+            // Private Methods
+
+            function activate() {
+                registerHandlers();
+            }
+
+            function registerHandlers() {
+                $('#charge-amount').on("keypress", checkForEnter);
+                $('#charge-type').on("keypress", checkForEnter);
+            }
+
+            function checkForEnter(e) {
+                if (e.keyCode === 13) {
+                    e.preventDefault();
+                    addCharge();
+                }
+            }
+
+            function parseCharge() {
+                return {
+                    amount: $('#charge-amount').val(),
+                    type: $('#charge-type').val(),
+                    transactionDate: moment()
+                };
+            }
+
+            function validateCharge(charge) {
+                var errors = [];
+                var doubleExpression = new RegExp("^-?[0-9]+(\\.[0-9][0-9]?)?$");
+
+                if (typeof charge.amount === undefined || charge.amount === "") {
+                    errors.push("charge-amount-missing");
+                } else if (!doubleExpression.test(charge.amount)) {
+                    errors.push("charge-amount-invalid");
+                }
+
+                if (typeof charge.type === undefined || charge.type === "") {
+                    errors.push("charge-type-missing");
+                }
+
+                return errors;
+            }
+
+            function saveCharge(charge) {
+                $("#charges").show();
+                $("#charges-not-found").hide();
+
+                clearForm();
+
+                charges.push(charge);
+                addChargeRow(charge);
+                updateTotals(charge);
+
+                $("#charge-amount").focus();
+            }
+
+            function updateTotals(charge) {
+                var chargeAmount = parseFloat(charge.amount);
+
+                switch (charge.type) {
+                    case 'Deposit':
+                        totals.deposits += chargeAmount;
+
+                        var prefix = totals.deposits < 0 ? '-$' : '$';
+                        $("#total-deposits").html(prefix + Math.abs(totals.deposits).toFixed(2));
+                        break;
+                    case 'Expense':
+                        totals.expenses += chargeAmount;
+
+                        var prefix = totals.expenses < 0 ? '-$' : '$';
+                        $("#total-expenses").html(prefix + Math.abs(totals.expenses).toFixed(2));
+                        break;
+                    case 'Fee':
+                        totals.fees += chargeAmount;
+
+                        var prefix = totals.fees < 0 ? '-$' : '$';
+                        $("#total-fees").html(prefix + Math.abs(totals.fees).toFixed(2));
+                        break;
+                    default:
+                        throw exception("unhandled charge type: " + charge.type);
+                }
+
+                resortTotals();
+                updateFullTotal();
+            }
+
+            function updateFullTotal() {
+                var fullTotal = totals.deposits + totals.expenses + totals.fees;
+                var prefix = fullTotal < 0 ? '-$' : '$';
+                $("#full-total").html(prefix + Math.abs(fullTotal).toFixed(2))
+            }
+
+            function resortTotals() {
+                $('#totals .alt-row').removeClass('alt-row');
+
+                var totalList = [
+                    {
+                        element: $("#total-deposits-row"),
+                        total: totals.deposits
+                    }, {
+                        element: $("#total-expenses-row"),
+                        total: totals.expenses
+                    }, {
+                        element: $("#total-fees-row"),
+                        total: totals.fees
+                    }
+                ];
+
+                totalList = _.orderBy(totalList, ['total'], ['asc']);
+
+                for (var i = 0; i < totalList.length; i++) {
+                    var element = totalList[i].element;
+                    element.insertAfter($('#totals tbody .header-row')[0]);
+
+                    if (i % 2 !== 0) {
+                        element.find('td').addClass('alt-row');
+                    }
+                }
+            }
+
+            function addChargeRow(charge) {
+                var chargeAmount = parseFloat(charge.amount);
+                var altClass = charges.length % 2 === 0 ? "" : "alt-row";
+                var isDebit = charge.amount > 0;
+                var isCredit = charge.amount < 0;
+                var debitCreditClass = isDebit ? "debit-amount" : isCredit ? "credit-amount" : "";
+
+                var newRow = '' +
+                    '<tr>' +
+                    '   <td class="' + altClass + ' ' + debitCreditClass + '">' +
+                    (isCredit ? '($' : '$') +
+                    Math.abs(chargeAmount).toFixed(2) +
+                    (isCredit ? ')' : '') +
+                    '   </td>' +
+                    '   <td class="' + altClass + '">' +
+                    charge.type +
+                    '   </td>' +
+                    '   <td class="' + altClass + '">' +
+                    charge.transactionDate.format("M/D/YYYY h:mm:ss A") +
+                    '   </td>' +
+                    '</tr>';
+
+                $(newRow).insertAfter($('#charges tbody .header-row')[0]);
+            }
+
+            function clearForm() {
+                $('#charge-amount').val('');
+                $('#charge-type').val('');
+            }
+
+            function displayErrors(errors) {
+                _.forEach(errors, function (error) {
+                    console.log('#' + error);
+                    $('#' + error).show();
+                });
+            }
+
+            function resetErrors() {
+                var errors = $(".error-message");
+
+                _.forEach(errors, function (error) {
+                    $(error).hide();
+                });
+            }
+        })();
+    </script>
+}
+
+<div class="app-container">
+    <div class="app-header">
+        <span class="hidden-xs">Line Charge Application (</span>@ViewBag.Title<span class="hidden-xs">)</span>
+    </div>
+    <div class="entry-section">
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="form-inline pull-right">
+                    <input class="form-control" placeholder="Charge Amount" id="charge-amount" maxlength="10" />
+                    <select class="form-control" placeholder="Charge Type" id="charge-type">
+                        <option selected="selected" value="">Charge Type</option>
+                        <option value="Deposit">Deposit</option>
+                        <option value="Fee">Fee</option>
+                        <option value="Expense">Expense</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary" onclick="controller.addCharge()">
+                        <span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Add
+                    </button>
+                </div>
+                <div class="clearfix"></div>
+
+                <div class="pull-right error-message" id="charge-amount-missing">
+                    <span class="text-danger">Charge Amount is required.</span>
+                </div>
+                <div class="clearfix"></div>
+
+                <div class="pull-right error-message" id="charge-amount-invalid">
+                    <span class="text-danger">Amount must be a valid number (up to two decimal places).</span>
+                </div>
+                <div class="clearfix"></div>
+
+                <div class="pull-right error-message" id="charge-type-missing">
+                    <span class="text-danger">Charge Type is required.</span>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="display-section">
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="table-header">
+                    <span class="glyphicon glyphicon-credit-card"></span> <span>Charges</span>
+                </div>
+
+                <div id="charges-not-found">
+                    No charges found.
+                </div>
+
+                <table id="charges">
+                    <tbody>
+                        <tr class="header-row">
+                            <th>AMOUNT</th>
+                            <th>TYPE</th>
+                            <th>TRANSACTION DATE</th>
+                        </tr>
+                        <tr class="footer-row">
+                            <th colspan="3" id="full-total">$0.00</th>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section-separator"></div>
+
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="table-header">
+                    <span class="glyphicon glyphicon-usd"></span> <span>Totals by Type</span>
+                </div>
+
+                <table id="totals">
+                    <tr class="header-row">
+                        <th>TYPE</th>
+                        <th><span class="glyphicon glyphicon-sort-by-attributes-alt"></span> AMOUNT</th>
+                    </tr>
+                    <tr id="total-deposits-row">
+                        <td>Deposit</td>
+                        <td id="total-deposits">$0.00</td>
+                    </tr>
+                    <tr id="total-expenses-row">
+                        <td class="alt-row">Expense</td>
+                        <td class="alt-row" id="total-expenses">$0.00</td>
+                    </tr>
+                    <tr id="total-fees-row">
+                        <td>Fee</td>
+                        <td id="total-fees">$0.00</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
